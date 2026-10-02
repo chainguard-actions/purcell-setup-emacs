@@ -1,0 +1,39 @@
+name: Test basic Emacs installation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: setup-emacs
+        uses: .
+        with:
+          version: "29.1"
+      - name: Assert emacs is installed and runnable
+        run: |
+          echo "Checking emacs is on PATH..."
+          if ! command -v emacs &>/dev/null; then
+            echo "FAIL: emacs not found on PATH"
+            exit 1
+          fi
+          echo "PASS: emacs found at $(command -v emacs)"
+          echo "Checking emacs version output..."
+          EMACS_VERSION="$(emacs --version 2>&1 | head -1)"
+          echo "emacs version: $EMACS_VERSION"
+          if [ -z "$EMACS_VERSION" ]; then
+            echo "FAIL: emacs --version returned empty output"
+            exit 1
+          fi
+          echo "PASS: emacs version reported: $EMACS_VERSION"
+      - name: Assert emacs can evaluate a basic expression
+        run: |
+          echo "Running emacs --batch eval..."
+          RESULT="$(emacs --batch --eval '(message "hello from emacs")' 2>&1)"
+          echo "result: $RESULT"
+          if echo "$RESULT" | grep -q "hello from emacs"; then
+            echo "PASS: emacs evaluated expression successfully"
+          else
+            echo "FAIL: expected 'hello from emacs' in output, got: $RESULT"
+            exit 1
+          fi
