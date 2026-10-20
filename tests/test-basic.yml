@@ -1,0 +1,32 @@
+name: Test basic Emacs installation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: setup-emacs
+        name: Set up Emacs 28.2
+        uses: .
+        with:
+          version: "28.2"
+
+      - name: Assert Emacs is installed and correct version
+        run: |
+          echo "Checking emacs is on PATH..."
+          if ! command -v emacs &>/dev/null; then
+            echo "FAIL: emacs not found on PATH"
+            exit 1
+          fi
+          echo "PASS: emacs found at $(command -v emacs)"
+          echo "Checking emacs version output..."
+          EMACS_VERSION="$(emacs --version | head -1)"
+          echo "emacs version: $EMACS_VERSION"
+          if echo "$EMACS_VERSION" | grep -q "28\.2"; then
+            echo "PASS: emacs 28.2 installed correctly"
+          else
+            echo "FAIL: expected emacs 28.2 but got: $EMACS_VERSION"
+            exit 1
+          fi

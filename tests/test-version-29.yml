@@ -1,0 +1,43 @@
+name: Test Emacs 29.1 installation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: setup-emacs
+        name: Set up Emacs 29.1
+        uses: .
+        with:
+          version: "29.1"
+
+      - name: Assert Emacs 29.1 is installed and functional
+        run: |
+          echo "Checking emacs is on PATH..."
+          if ! command -v emacs &>/dev/null; then
+            echo "FAIL: emacs not found on PATH"
+            exit 1
+          fi
+          echo "PASS: emacs found at $(command -v emacs)"
+
+          echo "Checking emacs version..."
+          EMACS_VERSION="$(emacs --version | head -1)"
+          echo "emacs version: $EMACS_VERSION"
+          if echo "$EMACS_VERSION" | grep -q "29\.1"; then
+            echo "PASS: emacs 29.1 installed correctly"
+          else
+            echo "FAIL: expected emacs 29.1 but got: $EMACS_VERSION"
+            exit 1
+          fi
+
+          echo "Checking emacs can evaluate lisp..."
+          RESULT="$(emacs --batch --eval '(message "hello from emacs")' 2>&1)"
+          echo "eval result: $RESULT"
+          if echo "$RESULT" | grep -q "hello from emacs"; then
+            echo "PASS: emacs can evaluate lisp"
+          else
+            echo "FAIL: emacs lisp evaluation failed: $RESULT"
+            exit 1
+          fi
